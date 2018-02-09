@@ -1,0 +1,28 @@
+---
+title: "Peterborough Coffee shops"
+output: html_notebook
+---
+
+```{r}
+library(osmdata)
+library(magrittr)
+library(dplyr)
+library(sf)
+```
+
+https://emmavestesson.netlify.com/2018/02/what-should-i-have-for-lunch/
+
+```{r }
+# get coffee shops in Peterborough centre
+q0 <- opq(bbox = c(-0.2516654311,52.5702242398,-0.2349069891,52.5767054999))
+res0 <- osmdata_sf(q0)
+
+cafe <- add_osm_feature(opq = q0, key = "amenity", value = "cafe") %>% 
+  osmdata_sf()
+cafe <- cafe$osm_points
+cafe <- st_transform(cafe, crs = 4326)
+cafe <- cafe %>% 
+  select(osm_id, name)
+```
+
+
