@@ -1,0 +1,470 @@
+---
+title: Scrabble two letter words
+output:
+ html_document:
+      theme: flatly
+      highlight: textmate
+---
+
+```{r markdown, echo = FALSE, warning = FALSE}
+library(knitr)
+library(devtools)
+opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
+```
+
+```{r setup, message = FALSE}
+library(purrr)
+library(glue)
+library(here)
+library(magrittr)
+```
+
+```{r}
+rules <- list()
+```
+
+```{r}
+words <- list(
+  name = "Remaining words",
+  before  = NA_character_,
+  consonant = NA_character_,
+  after = NA_character_,
+  words = c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar", "as", "at", "aw", "ax", "ay", "ba", "be", "bi", "bo", "by", "ch", "da", "de", "di", "do", "ea", "ed", "ee", "ef", "eh", "el", "em", "en", "er", "es", "et", "ex", "fa", "fe", "fy", "gi", "go", "gu", "ha", "he", "hi", "hm", "ho", "id", "if", "in", "io", "is", "it", "ja", "jo", "ka", "ki", "ko", "ky", "la", "li", "lo", "ma", "me", "mi", "mm", "mo", "mu", "my", "na", "ne", "no", "nu", "ny", "ob", "od", "oe", "of", "oh", "oi", "om", "on", "oo", "op", "or", "os", "ou", "ow", "ox", "oy", "pa", "pe", "pi", "po", "qi", "re", "sh", "si", "so", "st", "ta", "te", "ti", "to", "ug", "uh", "um", "un", "up", "ur", "us", "ut", "we", "wo", "xi", "xu", "ya", "ye", "yo", "yu", "za", "zo")
+)
+```
+
+## Common words
+```{r}
+rule <- list(
+  name = "Common words",
+  before  = NA_character_,
+  consonant = NA_character_,
+  after = NA_character_,
+  words = c("am", "an", "as", "at", "be", "by", "do", "go", "he", "hi", "if", "in", "is", "it", "me", "my", "no", "of", "on", "or", "ox", "so", "to", "up", "us", "we")
+)
+```
+
+```{r, rule_formatting}
+# get word list
+word_list <- rule %>% pluck("words")
+# add rule to rules list
+rules <- rules %>% append(list(rule))
+# remove word list from words
+words[["words"]] <- words[["words"]] %>% 
+  discard(words[["words"]] %in% word_list)
+# print word list
+collapse(word_list, sep = " ") %>% cat()
+```
+
+## All vowels
+
+### **aeiou** vowels before consonants **ns**
+```{r}
+rule <- list(
+  name = "aeiou vowels before consonants ns",
+  before  = "aeiou",
+  consonant = "ns",
+  after = NA_character_,
+  words = c("an", "en", "in", "on", "un", "as", "es", "is", "os", "us")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**en** = *unit of measurement*
+**es** = *letter s*
+**os** = *mouthlike opening*
+**un** = *one*
+
+### **aeiou** vowels after consonant **m**
+```{r}
+rule <- list(
+  name = "aeiou vowels after consonant m",
+  before  = NA_character_,
+  consonant = "m",
+  after = "aeiou",
+  words = c("ma", "me", "mi", "mo", "mu")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ma** = *abbreviation for mother*
+**mi** = *musical note*
+**mo** = *abbreviation for moment*
+**mu** = *Greek letter*
+
+## **aeo** vowels
+
+### **aeo** vowels surround themselves and their adjacent consonants
+```{r}
+rule <- list(
+  name = "aeo vowels surround themselves and their adjacent consonants",
+  before  = "aeo",
+  consonant = NA_character_,
+  after = "aeo",
+  words = c("aa", "ab", "ba", "de", "ed", "ee", "ef", "fe", "on", "no", "oo", "op", "po")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**aa** = *rough volcanic rock*
+**ab** = *abbreviaion for abdominal muscle*
+**ba** = *Ancient Eygptian symbol for soul*
+**de** = *prefix of or from*  
+**ed** = *abbreviation for editor*
+**ee** = *scots word for eye*
+**ef** = *letter f*
+**fe** = *fee*
+**po** = *bedpan*
+**oo** = *scots word for wool*
+**op** = *abbreviation for operation*
+
+### **aeo** vowels surround consonants **dhmn**
+```{r}
+rule <- list(
+  name = "aeo vowels surround consonants dhmn",
+  before  = "aeo",
+  consonant = "dhmn",
+  after = "aeo",
+  words = c("ad", "ed", "od", "da", "de", "do", "ah", "eh", "oh", "ha", "he", "ho", "am", "em", "om", "ma", "me", "mo", "an", "en", "on", "na", "ne", "no")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ad** = *abbreviation for advertisement*
+**ah** = *sound of surprise*
+**da** = *Burmese knife*
+**de** = *prefix of or from*
+**ed** = *abbreviation for editor*  
+**eh** = *sound of surprise*
+**em** = *unit of measurement*
+**ha** = *sound of laughter*
+**ho** = *sound of laughter*
+**ma** = *abbreviation for mother*  
+**mo** = *abbreviation for moment*
+**na** = *Scots word for no*
+**ne** = *abbrevation for formally known as*
+**od** = *mystical force*
+**oh** = *sound of surprise*  
+**om** = *Hindu syllable*
+
+### **aeo** vowels before consonants **rx**
+```{r}
+rule <- list(
+  name = "aeo vowels before consonants rx",
+  before  = "aeo",
+  consonant = "rsx",
+  after = NA_character_,
+  words = c("ar", "er", "or", "ax", "ex", "ox")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ar** = *letter r*
+**ax** = *axe*
+**er** = *sound of hesitation*
+**ex** = *excluding*
+
+### **aeo** vowels after consonants **bpty**
+```{r}
+rule <- list(
+  name = "aeo vowels after consonants bpty",
+  before  = NA_character_,
+  consonant = "bpty",
+  after = "aeo",
+  words = c("ba", "be", "bo", "pa", "pe", "po", "ta", "te", "to", "ya", "ye", "yo")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ba** = *Ancient Eygptian symbol for soul*
+**bo** = *sound to startle*
+**pa** = *abbreviation for father*
+**pe** = *Hebrew letter*
+**po** = *bedpan*  
+**ta** = *abbreviation for thanks*
+**te** = *musical note*
+**ya** = *you*
+**ye** = *the*
+**yo** = *sound to attract attention* 
+
+## **iu** vowels
+
+### **iu** vowels before consonant **t**
+```{r}
+rule <- list(
+  name = "iu vowels before consonants t",
+  before  = "iu",
+  consonant = "t",
+  after = NA_character_,
+  words = c("it", "ut")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ut** = *musical note*
+
+### **iu** vowels after consonants **gx**
+```{r}
+rule <- list(
+  name = "iu vowels after consonants gx",
+  before  = NA_character_,
+  consonant = "gx",
+  after = "iu",
+  words = c("gi", "gu", "xi", "xu")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**gi** = *martial arts white clothing*
+**gu** = *shetland violin*
+**xi** = *Greek letter*
+**xu** = *Vietnamese currency*
+
+## **aio** vowels
+
+### **aio** vowels surround consonant **d**
+```{r}
+rule <- list(
+  name = "aio vowels surround consonant d",
+  before  = "aio",
+  consonant = "d",
+  after = "aio",
+  words = c("ad", "da", "di", "id", "do", "od")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ad** = *abbreviation for advertisement*
+**da** = *Burmese knife*
+**di** = *gods*
+**id** = *unconscious instinct*
+**od** = *mystical force*
+
+### **aio** vowels after consonants **bhklpt**
+```{r}
+rule <- list(
+  name = "aio vowels after consonants bhklpt",
+  before  = NA_character_,
+  consonant = "bhklmpt",
+  after = "aio",
+  words = c("ba", "bi", "bo", "ha", "hi", "ho", "ka", "ki", "ko", "la", "li", "lo", "pa", "pi", "po", "ta", "ti", "to")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ba** = *ancient Eygptian symbol for soul*
+**bi** = *abbreviation for bisexual*
+**bo** = *sound to startle*
+**ha** = *sound of laughter*
+**ho** = *sound of laughter*  
+**ka** = *Egyptian spirit*
+**ki** = *Japanese martial art*
+**ko** = *New Zealand digging tool*
+**la** = *musical note*
+**li** = *Chinese measurement of distance*
+**lo** = *look*  
+**pa** = *abbreviation for father*
+**pi** = *Hebrew letter*
+**po** = *bedpan*  
+**ta** = *abbreviation for thank you*
+**ti** = *musical note*
+
+## Difficult consonants
+
+### **c** is followed by consonant **h**
+```{r}
+rule <- list(
+  name = "c is only followed by consonant h",
+  before  = NA_character_,
+  consonant = "c",
+  after = "h",
+  words = c("ch")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ch** = *old word meaning to lengthen*
+
+### **jz** are followed by vowels **ao**
+```{r}
+rule <- list(
+  name = "jz are only followed by vowels ao",
+  before  = NA_character_,
+  consonant = "jz",
+  after = "ao",
+  words = c("ja", "jo", "za", "zo")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ja** = *South African word for yes*
+**jo** = *Scots word for sweetheart*
+**za** = *pizza*
+**zo** = *Tibetan yak x cow hybrid*
+
+### **q** is followed by vowel **i**
+```{r}
+rule <- list(
+  name = "q is only followed by vowel i",
+  before  = NA_character_,
+  consonant = "q",
+  after = "i",
+  words = c("qi")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**qi** = *Chinese life force*
+
+### **r** is followed by vowel **e**
+```{r}
+rule <- list(
+  name = "r is followed only by vowel e",
+  before  = NA_character_,
+  consonant = "r",
+  after = "e",
+  words = c("re")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**re** = *prefix meaning concerning*
+
+### **v** is not surrounded by any vowel or consonant
+```{r}
+rule <- list(
+  name = "v is not surrounded by any vowel or consonant",
+  before = NA_character_,
+  consonant = "v",
+  after = NA_character_,
+  words = NA_character_
+)
+```
+
+### **x** is preceded by vowels **aeo** and followed by vowels **iu**
+```{r}
+rule <- list(
+  name = "x is preceded by vowels aeo and followed by vowels iu",
+  before = "aeo",
+  consonant = "x",
+  after = "iu",
+  words = c("ax", "ex", "ox", "xi", "xu")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ax** = *axe*
+**ex** = *excluding*
+**xi** = *Greek letter*
+**xu** = *Vietnamese currency*
+
+## Vowels only
+```{r}
+rule <- list(
+  name = "Vowels only",
+  before  = NA_character_,
+  consonant = NA_character_,
+  after = NA_character_,
+  words = c("aa", "ae", "ai", "ea", "ee", "io", "oe", "oi", "oo", "ou")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**aa** = *rough volcanic rock*
+**ae** = *scots word for one*
+**ai** = *three-toed sloth*
+**ea** = *river*
+**ee** = *scots word for eye*
+**io** = *moth*
+**oe** = *grandchild*  
+**oi** = *sound to attract attention*
+**oo** = *scots word for wool*
+**ou** = *man*
+
+## Consonants only
+```{r}
+rule <- list(
+  name = "Consonants only",
+  before  = NA_character_,
+  consonant = NA_character_,
+  after = NA_character_,
+  words = c("by", "ch", "fy", "hm", "ky", "mm", "my", "ny", "sh", "st")
+)
+```
+
+```{r ref.label='rule_formatting'}
+```
+
+**ch** = *old word meaning to lengthen*
+**fy** = *sound of disapproval*
+**hm** = *sound of doubt*
+**ky** = *Scots word for cows*
+**mm** = *sound of enjoyment*
+**ny** = *near*  
+**sh** = *sound requesting quiet*
+**st** = *sound to attract attention*
+
+## Remaining words
+
+There are `r length(words[["words"]])` words remaining
+
+```{r}
+rules <- rules %>% append(list(words))
+collapse(words[["words"]], sep = " ") %>% cat()
+```
+
+**ag** = *abbreviation for agriculture*
+**al** = *Asian shrub or tree*
+**aw** = *all*
+**ay** = *yes*
+**el** = *letter l*
+**et** = *ate*
+**fa** = *musical note*
+**nu** = *Greek letter*  
+**ob** = *expression of opposition*
+**ow** = *sound of pain*
+**oy** = *grandchild*
+**si** = *musical note*
+**ug** = *hate*
+**uh** = *sound of hesitation*
+**um** = *sound of hesitation*  
+**ur** = *sound of hesitation*
+**wo** = *woe*
+**yu** = *jade*
+
+```{r echo = FALSE}
+saveRDS(rules, here("two_letter_word_rules.rds"))
+```
+

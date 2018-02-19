@@ -12,140 +12,31 @@ library(devtools)
 opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
-```{r setup, warning = FALSE}
-library(glue)
+```{r setup, message = FALSE}
+library(stringr)
+library(dplyr)
+library(purrr)
 library(magrittr)
+library(glue)
+library(here)
 ```
 
 ```{r}
-words <- c("ae", "ah", "ai", "al", "ar", "aw", "ay", "ba", "bo", "da", "de", "di", "ea", "ef", "eh", "el", "es", "et", "fa", "fe", "gi", "gu", "ha", "ho", "id", "io", "ka", "ki", "ko", "la", "li", "lo", "ob", "od", "oe", "oh", "oi", "os", "ou", "ow", "oy", "pa", "pe", "po", "si", "te", "ti", "ug", "uh", "ur", "ut", "wo", "ya", "ye", "yo", "yu")
-```
-
-There are 124 two letter words
-
-```{r}
-words_common <- c("am", "an", "as", "at", "be", "by", "do", "go", "he", "hi", "if", "in", "is", "it", "me", "my","no", "of", "on", "or", "ox", "pi", "so", "to", "up", "us", "we")
-```
-
-**`r length(words_common)` are common words**
-```{r}
-words_common_string <- collapse(words_common, sep = " ") %>% cat()
+extract_words <- function(letter, words = words_all) {
+  
+  list(letter = letter,
+       all = str_subset(words, letter),
+       first = str_subset(words, glue("^", {letter})),
+       second = str_subset(words, glue({letter}, "$")))
+}
 ```
 
 ```{r}
-words_abbreviations <- c("ab", "ad", "ag", "ax", "bi", "ed", "ma", "mo", "ne", "op", "ta")
-```
-
-**`r length(words_abbreviations)` are abbreviations**
-```{r}
-words_abbreviations_string <- collapse(words_abbreviations, sep = " ") %>% cat()
-```
-
-**ab** = *abdominal muscle*
-**ad** = *advertisement*
-**ag** = *agriculture*
-**ax** = *axe*
-**bi** = *bisexual*
-**ed** = *editor*
-**ma** = *mother*
-**mo** = *moment*  
-**ne** = *formally known as*
-**op** = *operation*
-**ta** = *thanks*
-
-```{r}
-words_prefix <- c("er", "ex", "re", "un" )
-```
-
-**`r length(words_prefix)` are prefixes or suffixes**
-```{r}
-words_prefix_string <- collapse(words_prefix, sep = " ") %>% cat()
+words_all <- c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar", "as", "at", "aw", "ax", "ay", "ba", "be", "bi", "bo", "by", "ch", "da", "de", "di", "do", "ea", "ed", "ee", "ef", "eh", "el", "em", "en", "er", "es", "et", "ex", "fa", "fe", "fy", "gi", "go", "gu", "ha", "he", "hi", "hm", "ho", "id", "if", "in", "io", "is", "it", "ja", "jo", "ka", "ki", "ko", "ky", "la", "li", "lo", "ma", "me", "mi", "mm", "mo", "mu", "my", "na", "ne", "no", "nu", "ny", "ob", "od", "oe", "of", "oh", "oi", "om", "on", "oo", "op", "or", "os", "ou", "ow", "ox", "oy", "pa", "pe", "pi", "po", "qi", "re", "sh", "si", "so", "st", "ta", "te", "ti", "to", "ug", "uh", "um", "un", "up", "ur", "us", "ut", "we", "wo", "xi", "xu", "ya", "ye", "yo", "yu", "za", "zo")
 ```
 
 ```{r}
-words_restricted <- c("ch", "ja", "jo", "qi", "za", "zo")
+two_letter_word_list <- map(letters, extract_words) %T>% 
+  saveRDS(here("two_letter_word_list.rds"))
 ```
 
-**5 letters, c, j, q, v, z only contain 1 or 2 two letter words**
-
-* **v** has no two letter words
-* **c, q** has one two letter word
-* **j, z** has two two letter words ending in either a or o
-
-```{r}
-words_restricted_string <- collapse(words_restricted, sep = " ") %>% cat()
-```
-
-**ch** = *old word meaning to lengthen*
-**ja** = *South African word for yes*
-**jo** = *Scots word for sweetheart*
-**qi** = *Chinese life force*
-**za** = *pizza*  
-**zo** = *Tibetan yak x cow hybrid*
-
-```{r}
-words_vowels <- c("em", "en", "mi", "mu", "na", "nu", "om", "um")
-```
-
-**2 letters m and n can have most vowels before or after them** (*except im and ni*)
-
-```{r}
-words_vowels_string <- collapse(words_vowels, sep = " ") %>% cat()
-```
-
-**em** = *unit of measurement*
-**en** = *unit of measurement*
-**mi** = *musical note*
-**mu** = *Greek letter*
-**na** = *Scots word for no*
-**nu** = *Greek letter*  
-**om** = *Hindu syllable*
-**um** = *sound of hesitation*
-
-```{r}
-words_x_vowels <- c("xi", "xu")
-```
-
-**1 letter x has 3 vowels before and 2 vowels after it**
-
-```{r}
-words_x_vowels_string <- collapse(words_x_vowels, sep = " ") %>% cat()
-```
-
-**xi** = *Greek letter*
-**xu** = *Vietnamese currency*
-
-```{r}
-words_duplicate <- c("aa", "ee", "oo", "mm")
-```
-
-**`r length(words_duplicate)` contain duplicate letters**
-```{r}
-words_duplicate_string <- collapse(words_duplicate, sep = " ") %>% cat()
-```
-
-**aa** = *rough volcanic rock*
-**ee** = *scots word for eye*
-**oo** = *scots word for wool*
-**mm** = *sound of enjoyment*
-
-```{r}
-words_consonants <- c("fy", "hm", "ky", "ny", "sh", "st")
-```
-
-**`r length(words_consonants)` only contain consonants**
-```{r}
-words_consonants_string <- collapse(words_consonants, sep = " ") %>% cat()
-```
-
-**fy** = *sound of disapproval*
-**hm** = *sound of doubt*
-**ky** = *scots word for cows*
-**ny** = *near*
-**sh** = *sound requesting quiet*  
-**st** = *sound to attract attention*
-
-There are `r length(words)` words remaining
-```{r}
-words_string <- collapse(words, sep = " ") %>% cat()
-```
