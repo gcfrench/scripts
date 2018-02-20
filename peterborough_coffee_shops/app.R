@@ -3,9 +3,8 @@ library(leaflet)
 library(dplyr)
 library(tibble)
 library(sf)
+library(lwgeom)
 library(stringr)
-
-# https://emmavestesson.netlify.com/2018/02/what-should-i-have-for-lunch/
 
 # cafes
 cafe <- tribble(
@@ -22,10 +21,11 @@ cafe <- tribble(
   "John Lewis", -0.2449543, 52.5744729,
   "Marks & Spencer", -0.2445198, 52.5740719,
   "Westgate", -0.2430499, 52.5753434,
-  "Market 1", -0.2391929, 52.5747955,
-  "Market_2", -0.2395222, 52.5749454,
+  "MD coffee", -0.2391929, 52.5747955,
+  "Market", -0.2395222, 52.5749454,
   "Nata", -0.2406728, 52.5740821,
-  "Rivergate", -0.2428923,  52.569892,
+  "Rico's", -0.2428923,  52.569892,
+  "ASDA", -0.2437795, 52.5690086,
   "Squires", -0.2459715, 52.5719277,
   "Waitrose", -0.2499466, 52.5753281,
   "Great Northern Hotel", -0.2491955, 52.5746503,
