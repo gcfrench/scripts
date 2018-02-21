@@ -9,16 +9,17 @@ output:
 ```{r markdown, echo = FALSE, warning = FALSE}
 library(knitr)
 library(devtools)
-opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
+opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
-```{r setup, message = FALSE}
+```{r setup, message = FALSE, warning = FALSE}
 library(stringr)
 library(dplyr)
 library(purrr)
 library(magrittr)
 library(glue)
 library(here)
+library(listviewer)
 ```
 
 ```{r}
@@ -36,7 +37,22 @@ words_all <- c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar",
 ```
 
 ```{r}
-two_letter_word_list <- map(letters, extract_words) %T>% 
-  saveRDS(here("two_letter_word_list.rds"))
+
+two_letter_list <- map(letters, extract_words)
+str(two_letter_list, list.len = 4, max.level = 2)
+listviewer::jsonedit(two_letter_list, mode = "view")
 ```
+
+```{r}
+# remember { to prevent two_letter_list being passed into tibble
+two_letter <- two_letter_list %>% {
+  tibble(
+     first = map(., "second"),
+     letter = map_chr(., "letter"),
+     second = map(.,"first")
+  )} %T>% 
+  saveRDS(here("two_letter.rds")) %>% 
+  glimpse()
+```
+
 
