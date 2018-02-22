@@ -4,6 +4,7 @@ output:
  html_document:
       theme: flatly
       highlight: textmate
+      code_folding: show
 ---
 
 ```{r markdown, echo = FALSE, warning = FALSE}
@@ -16,11 +17,20 @@ opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, comment = "")
 library(stringr)
 library(dplyr)
 library(purrr)
+library(tibble)
 library(magrittr)
 library(glue)
 library(here)
 library(listviewer)
 ```
+
+Character vector of 124 two-letter words 
+
+```{r}
+words_all <- c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar", "as", "at", "aw", "ax", "ay", "ba", "be", "bi", "bo", "by", "ch", "da", "de", "di", "do", "ea", "ed", "ee", "ef", "eh", "el", "em", "en", "er", "es", "et", "ex", "fa", "fe", "fy", "gi", "go", "gu", "ha", "he", "hi", "hm", "ho", "id", "if", "in", "io", "is", "it", "ja", "jo", "ka", "ki", "ko", "ky", "la", "li", "lo", "ma", "me", "mi", "mm", "mo", "mu", "my", "na", "ne", "no", "nu", "ny", "ob", "od", "oe", "of", "oh", "oi", "om", "on", "oo", "op", "or", "os", "ou", "ow", "ox", "oy", "pa", "pe", "pi", "po", "qi", "re", "sh", "si", "so", "st", "ta", "te", "ti", "to", "ug", "uh", "um", "un", "up", "ur", "us", "ut", "we", "wo", "xi", "xu", "ya", "ye", "yo", "yu", "za", "zo")
+```
+
+Extract words alphabetically into a list
 
 ```{r}
 extract_words <- function(letter, words = words_all) {
@@ -30,29 +40,43 @@ extract_words <- function(letter, words = words_all) {
        first = str_subset(words, glue("^", {letter})),
        second = str_subset(words, glue({letter}, "$")))
 }
-```
-
-```{r}
-words_all <- c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar", "as", "at", "aw", "ax", "ay", "ba", "be", "bi", "bo", "by", "ch", "da", "de", "di", "do", "ea", "ed", "ee", "ef", "eh", "el", "em", "en", "er", "es", "et", "ex", "fa", "fe", "fy", "gi", "go", "gu", "ha", "he", "hi", "hm", "ho", "id", "if", "in", "io", "is", "it", "ja", "jo", "ka", "ki", "ko", "ky", "la", "li", "lo", "ma", "me", "mi", "mm", "mo", "mu", "my", "na", "ne", "no", "nu", "ny", "ob", "od", "oe", "of", "oh", "oi", "om", "on", "oo", "op", "or", "os", "ou", "ow", "ox", "oy", "pa", "pe", "pi", "po", "qi", "re", "sh", "si", "so", "st", "ta", "te", "ti", "to", "ug", "uh", "um", "un", "up", "ur", "us", "ut", "we", "wo", "xi", "xu", "ya", "ye", "yo", "yu", "za", "zo")
-```
-
-```{r}
 
 two_letter_list <- map(letters, extract_words)
 str(two_letter_list, list.len = 4, max.level = 2)
-listviewer::jsonedit(two_letter_list, mode = "view")
+# listviewer::jsonedit(two_letter_list, mode = "view")
 ```
+
+Format words into tibble, first by making a named list of all words per letter with set_names, converting to character string using collapse and formatting into data frame using enframe
+
+```{r}
+two_letter_first <- set_names(map(two_letter_list, "first"), 
+                              map_chr(two_letter_list, "letter")) %>% 
+  map_chr(paste, collapse = ", ") %>% 
+  enframe(value = "letters")
+two_letter_first %>% 
+  kable()
+```
+
+Format words into tibble, creating list columns and then converting into character string using collapse
 
 ```{r}
 # remember { to prevent two_letter_list being passed into tibble
-two_letter <- two_letter_list %>% {
+two_letter_split <- two_letter_list %>% {
   tibble(
-     first = map(., "second"),
+     first = map(., "second") %>% 
+             map_chr(paste, collapse = ", "),
      letter = map_chr(., "letter"),
-     second = map(.,"first")
-  )} %T>% 
-  saveRDS(here("two_letter.rds")) %>% 
-  glimpse()
+     second = map(.,"first") %>% 
+              map_chr(paste, collapse = ", "),
+  )}
+two_letter_split %>% 
+  kable()
 ```
 
+
+
+
+
+
+```
 
