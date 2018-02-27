@@ -1,65 +1,83 @@
 ---
-title: Scrabble two letter words
-output:
- html_document:
-      theme: flatly
-      highlight: textmate
-      code_folding: show
+output: html_document
 ---
+
+<style>
+  .col2 {
+    columns: 2 200px;         /* number of columns and width in pixels*/
+    -webkit-columns: 2 200px; /* chrome, safari */
+    -moz-columns: 2 200px;    /* firefox */
+  }
+</style>
 
 ```{r markdown, echo = FALSE, warning = FALSE}
 library(knitr)
 library(devtools)
-opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, comment = "")
+opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(stringr)
 library(dplyr)
 library(purrr)
+library(tidyr)
 library(tibble)
 library(magrittr)
-library(glue)
 library(here)
 library(listviewer)
+library(kableExtra)
 ```
 
-Character vector of 124 two-letter words 
-
-```{r}
+```{r }
 words_all <- c("aa", "ab", "ad", "ae", "ag", "ah", "ai", "al", "am", "an", "ar", "as", "at", "aw", "ax", "ay", "ba", "be", "bi", "bo", "by", "ch", "da", "de", "di", "do", "ea", "ed", "ee", "ef", "eh", "el", "em", "en", "er", "es", "et", "ex", "fa", "fe", "fy", "gi", "go", "gu", "ha", "he", "hi", "hm", "ho", "id", "if", "in", "io", "is", "it", "ja", "jo", "ka", "ki", "ko", "ky", "la", "li", "lo", "ma", "me", "mi", "mm", "mo", "mu", "my", "na", "ne", "no", "nu", "ny", "ob", "od", "oe", "of", "oh", "oi", "om", "on", "oo", "op", "or", "os", "ou", "ow", "ox", "oy", "pa", "pe", "pi", "po", "qi", "re", "sh", "si", "so", "st", "ta", "te", "ti", "to", "ug", "uh", "um", "un", "up", "ur", "us", "ut", "we", "wo", "xi", "xu", "ya", "ye", "yo", "yu", "za", "zo")
 ```
 
-Extract words alphabetically into a list
-
-```{r}
+```{r }
+# Extract words into a list
 extract_words <- function(letter, words = words_all) {
   
   list(letter = letter,
-       all = str_subset(words, letter),
-       first = str_subset(words, glue("^", {letter})),
-       second = str_subset(words, glue({letter}, "$")))
+       first = str_subset(words, str_glue("^", {letter})),
+       second = str_subset(words, str_glue({letter}, "$")))
 }
 
 two_letter_list <- map(letters, extract_words)
-str(two_letter_list, list.len = 4, max.level = 2)
+# str(two_letter_list, list.len = 4, max.level = 2)
 # listviewer::jsonedit(two_letter_list, mode = "view")
 ```
 
-Format words into tibble, first by making a named list of all words per letter with set_names, converting to character string using collapse and formatting into data frame using enframe
-
 ```{r}
+# Make a named list of first words per letter with set_names
 two_letter_first <- set_names(map(two_letter_list, "first"), 
-                              map_chr(two_letter_list, "letter")) %>% 
-  map_chr(paste, collapse = ", ") %>% 
-  enframe(value = "letters")
-two_letter_first %>% 
-  kable()
+                              map_chr(two_letter_list, "letter"))
+#str(two_letter_first, list.len = 4, max.level = 2)
 ```
 
-Format words into tibble, creating list columns and then converting into character string using collapse
+```{r eval = FALSE}
+#Format list into character string by converting to character vector with flatten_chr and then character string with str_flatten
+two_letter_string <- two_letter_first %>% 
+  flatten_chr() %>% 
+  paste(collapse = ", ")
+two_letter_string
+```
 
 ```{r}
+# Format words into tibble, converting to character string using collapse and formatting into data frame using enframe
+two_letter_df <- two_letter_first %>%
+  map_chr(paste, collapse = ", ") %>% 
+  enframe(value = "letters") %>% 
+  filter(name != "v")
+two_letter_df %>%
+  select(letters) %>% 
+  kable("html") %>%
+  kable_styling(full_width = TRUE, font_size = 17) %>% 
+  column_spec(1, bold = TRUE) %>% 
+  row_spec(25, hline_after = T) %>% 
+  gsub("<thead>.*</thead>", "", .)
+```
+
+```{r }
+# Format words into tibble, creating list columns and then converting into character string using collapse
 # remember { to prevent two_letter_list being passed into tibble
 two_letter_split <- two_letter_list %>% {
   tibble(
@@ -67,16 +85,127 @@ two_letter_split <- two_letter_list %>% {
              map_chr(paste, collapse = ", "),
      letter = map_chr(., "letter"),
      second = map(.,"first") %>% 
-              map_chr(paste, collapse = ", "),
+              map_chr(paste, collapse = ", ")
   )}
 two_letter_split %>% 
-  kable()
+  kable("html", align = c('r', 'c', 'l')) %>%
+  kable_styling(bootstrap_options = "condensed", 
+                full_width = TRUE, font_size = 17) %>% 
+  column_spec(1:3, bold = TRUE) %>% 
+  column_spec(2, border_left = TRUE, border_right = TRUE) %>% 
+  row_spec(26, hline_after = T) %>% 
+  gsub("<thead>.*</thead>", "", .)
 ```
 
-
-
-
-
-
+<br / >
+<div class="col2">
+```{r}
+word_definitions <- tibble::tribble(
+  ~"words", ~"definition",
+  "aa","rough volcanic rock",
+  "ab","abbreviation for abdominal muscle",
+  "ad","abbreviation for advertisement",
+  "ae","scots word for one",
+  "ag","abbreviation for agriculture",
+  "ah","sound of surprise",
+  "ai","three-toed sloth",
+  "al","Asian shrub or tree",
+  "ar","letter r",
+  "aw","all",
+  "ax","axe",
+  "ay","yes",
+  "ba","Ancient Eygptian symbol for soul",
+  "bi","abbreviation for bisexual",
+  "bo","sound to startle",
+  "ch","old word meaning to lengthen",
+  "da","Burmese knife",
+  "de","prefix of or from",
+  "di","gods",
+  "ea","river",
+  "ed","abbreviation for editor",
+  "ee","scots word for eye",
+  "ef","letter f",
+  "eh","sound of surprise",
+  "el","letter l",
+  "em","unit of measurement",
+  "en","unit of measurement",
+  "er","sound of hesitation",
+  "es","letter s",
+  "et","ate",
+  "ex","excluding",
+  "fa","musical note",
+  "fe","fee",
+  "fy","sound of disapproval",
+  "gi","martial arts white clothing",
+  "gu","shetland violin",
+  "ha","sound of laughter",
+  "hm","sound of doubt",
+  "ho","sound of laughter",
+  "id","unconscious instinct",
+  "io","moth",
+  "ja","South African word for yes",
+  "jo","Scots word for sweetheart",
+  "ka","Egyptian spirit",
+  "ki","Japanese martial art",
+  "ko","New Zealand digging tool",
+  "ky","Scots word for cows",
+  "la","musical note",
+  "li","Chinese measurement of distance",
+  "lo","look",
+  "ma","abbreviation for mother",
+  "mi","musical note",
+  "mm","sound of enjoyment",
+  "mo","abbreviation for moment",
+  "mu","Greek letter",
+  "na","Scots word for no",
+  "ne","abbreviation for formally known as",
+  "nu","Greek letter",
+  "ny","near",
+  "ob","expression of opposition",
+  "od","mystical force",
+  "oe","grandchild",
+  "oh","sound of surprise",
+  "oi","sound to attract attention",
+  "om","Hindu syllable",
+  "oo","scots word for wool",
+  "op","abbreviation for operation",
+  "os","mouthlike opening",
+  "ou","man",
+  "ow","sound of pain",
+  "oy","grandchild",
+  "pa","abbreviation for father",
+  "pe","Hebrew letter",
+  "pi","Hebrew letter",
+  "po","bedpan",
+  "qi","Chinese life force",
+  "re","prefix meaning concerning",
+  "sh","sound requesting quiet",
+  "si","musical note",
+  "st","sound to attract attention",
+  "ta","abbreviation for thanks",
+  "te","musical note",
+  "ti","musical note",
+  "ug","hate",
+  "uh","sound of hesitation",
+  "um","sound of hesitation",
+  "un","one",
+  "ur","sound of hesitation",
+  "ut","musical note",
+  "wo","woe",
+  "xi","Greek letter",
+  "xu","Vietnamese currency",
+  "ya","you",
+  "ye","the",
+  "yo","sound to attract attention",
+  "yu","jade",
+  "za","pizza",
+  "zo","Tibetan yak x cow hybrid"
+) %>% 
+  unite(words_defintion, sep = " : ") 
+word_definitions %>% 
+  kable("html") %>%
+  gsub("<thead>.*</thead>", "", .)
 ```
+</div>
+
 

@@ -60,7 +60,7 @@ ui <- shinyUI(fluidPage(
     titlePanel("CoffeeR"),
     
     sliderInput("distance", "Select walking distance",
-                min = min_distance, max = max_distance, 
+                min = 0, max = max_distance, 
                 value = c(0, 545), 
                 step = 100,
                 post = "m"),
