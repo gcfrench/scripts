@@ -102,7 +102,7 @@ titanic <- titanic %>%
   mutate(fare = replace_na(fare, 8.05))
 ```
 
-### Age
+#### Age
 
 Age is not know for 263 passengers. Missing ages predicted using either a decision tree or random forest
 
@@ -134,7 +134,7 @@ titanic <- bind_rows(train_age, test_age) %T>%
   write_csv(here::here("titanic.csv")) 
 ```
 
-## Title
+#### Title
 
 An additional variable to extract is the title from the names. This is taken from Vincent Broute's post [Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)
 
