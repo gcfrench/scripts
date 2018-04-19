@@ -2,9 +2,7 @@
 title: "Titanic survival machine learning analysis"
 author: Graham French
 date: '`r Sys.Date()`'
-output:
-  md_document:
-    variant: markdown_github
+output: html_notebook
 ---
 
 ```{r message = FALSE}
@@ -32,7 +30,7 @@ A good work through of the analysis is [Trevor Stephen's series of titanic tutor
 
 [Part 3](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-3-decision-trees/) of the tutorial calculates survival using decision trees, using the default control values and titanic variables
 
-```{r eval=FALSE, fig.width=8}
+```{r fig.width=8}
 fit <- rpart::rpart(survived ~ pclass + sex + age + sib_sp + parch + fare + embarked,
              data = train,
              method = "class",
@@ -40,11 +38,11 @@ fit <- rpart::rpart(survived ~ pclass + sex + age + sib_sp + parch + fare + emba
   rattle::fancyRpartPlot()
 ```
 
-```{r eval=FALSE}
+```{r }
 prediction <- predict(fit, test, type = "class")
 ```
 
-```{r eval=FALSE}
+```{r }
 # Kaggle submission: score = 0.78468
 submit <- test %>%
   mutate(PassengerId = passenger_id,
@@ -201,7 +199,7 @@ train_survived <- titanic %>%
 
 Random Forest method does not allow for missing values and requires factors for Survived and discrete variables
 
-```{r eval=FALSE}
+```{r }
 # Run random forest on training dataset with known survival
 set.seed(415)
 fit_survived <- randomForest::randomForest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare_bins + embarked + refined_title,
