@@ -37,6 +37,8 @@ fit <- rpart::rpart(survived ~ pclass + sex + age + sib_sp + parch + fare + emba
   rattle::fancyRpartPlot()
 ```
 
+![](titanic_survival_machine_learning_gcf_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
 ``` r
 prediction <- predict(fit, test, type = "class")
 ```
@@ -53,6 +55,12 @@ submit %>%
   tabyl(Survived) %>% 
   adorn_pct_formatting(digits = 1) 
 ```
+
+    ## Warning: package 'bindrcpp' was built under R version 3.4.4
+
+    ##  Survived   n percent
+    ##         0 288   68.9%
+    ##         1 130   31.1%
 
 Feature Engineering
 -------------------
@@ -75,8 +83,6 @@ titanic <- titanic %>%
     embarked = forcats::as_factor(embarked)
   )
 ```
-
-    ## Warning: package 'bindrcpp' was built under R version 3.4.4
 
 #### Embarked
 
@@ -265,7 +271,11 @@ fit_survived <- randomForest::randomForest(survived ~ pclass + sex + age_bins + 
                 importance = TRUE,
                 ntree = 2000) %T>% 
   randomForest::varImpPlot()
+```
 
+![](titanic_survival_machine_learning_gcf_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
+``` r
 # Update missing survival with predicted survival
 test_survived <- titanic %>% 
   filter(is.na(survived)) %>% 
