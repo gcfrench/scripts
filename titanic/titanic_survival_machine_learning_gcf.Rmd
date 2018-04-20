@@ -64,7 +64,7 @@ titanic <- bind_rows(train, test) %T>%
   write_csv(here::here("titanic_data.csv")) 
 ```
 
-Convert appropriate character fields to factors
+#### factor conversion
 
 ```{r}
 titanic <- titanic %>%
@@ -78,15 +78,17 @@ titanic <- titanic %>%
 
 #### Embarked
 
-Two passengers have an unknown embarked port, these are removed from the analysis
+Two passengers have an unknown embarked port. Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that the median fare for the class both passengers coincides with them embarking at Charbourg.
 
 ```{r}
+titanic <- titanic %>%
+  mutate(embarked = as.character(embarked),
+         embarked = if_else(embarked == "", "C", embarked),
+         embarked = as_factor(embarked))
+
 titanic %>% 
   tabyl(embarked) %>% 
   adorn_pct_formatting(digits = 1)
-
-titanic <- titanic %>%
-  filter(embarked != "")
 ```
 
 #### Fare
@@ -102,19 +104,6 @@ titanic <- titanic %>%
   mutate(fare = replace_na(fare, 8.05))
 ```
 
-Place the fares into four groups - 0-10$, 10-20$, 20-50$, 50+$
-
-```{r}
-titanic <- titanic %>% 
-  mutate(fare_bins = cut(fare, breaks = c(0, 10, 20, 50, 513), 
-                         include.lowest = TRUE,
-                         labels = c("fare_1", "fare_2", "fare_3", "fare_4"),
-                         ordered_factor = TRUE))
-titanic %>% 
-  tabyl(fare_bins) %>% 
-  adorn_pct_formatting(digits = 1)
-```
-
 #### Age
 
 Age is not know for 263 passengers. Missing ages predicted using either a decision tree or random forest
@@ -125,7 +114,7 @@ train_age <- titanic %>%
   filter(!is.na(age))
 
 # Run decision tree on training dataset with known ages
-# fit_age <- rpart::rpart(age ~ pclass + sex + sib_sp + parch + fare_bins + embarked,
+# fit_age <- rpart::rpart(age ~ pclass + sex + sib_sp + parch + fare + embarked,
 #                   data = train_age, 
 #                   method = "anova")
 
@@ -147,17 +136,46 @@ titanic <- bind_rows(train_age, test_age) %T>%
   write_csv(here::here("titanic.csv")) 
 ```
 
-Place the age into five groups - 0-5, 5-10, 10-16, 17-60, 60+
+[Vincent Broute analysis]((https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)) found that passengers 12 years old or less had a greater chance of survival and passengers 18-25 years old has a less chance. 
+
 ```{r}
 titanic <- titanic %>% 
-  mutate(age_bins = cut(age, breaks = c(0, 5, 10, 16, 60, 80), 
+  mutate(age_bins = cut(age, breaks = c(0, 12, 18, 25, 80), 
                          include.lowest = TRUE,
-                         labels = c("age_1", "age_2", "age_3", "age_4", "age_5"),
-                         ordered_factor = TRUE))
+                         labels = c("age_0-12", "age_12-18", "age_18-25", "age_25-80"),
+                         ordered_factor = TRUE)) %>% 
+  mutate(age_bins = fct_other(age_bins, keep = c("age_0-12", "age_18-25")))
+
 titanic %>% 
   tabyl(age_bins) %>% 
   adorn_pct_formatting(digits = 1)
+
 ```
+
+#### Family size
+
+Family size is the number of family members a passenger is travelling with, adding up the siblings, spouses, parents and children, and adding one for the passenger themselves
+
+```{r}
+titanic <- titanic %>%
+  mutate(family_size = sib_sp + parch + 1)
+```
+
+Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that singletons or larger families above 4 members did not survive as much as passengers within a family of less than 4 members
+
+```{r}
+titanic <- titanic %>%
+    mutate(family_size_bins = cut(family_size, breaks = c(0, 1, 4, 11), 
+                         include.lowest = TRUE,
+                         labels = c("singleton", "family_size_1-4", "family_size_1-11"),
+                         ordered_factor = TRUE))
+
+titanic %>% 
+  tabyl(family_size_bins) %>% 
+  adorn_pct_formatting(digits = 1)
+```
+
+#### Family Group
 
 #### Title
 
@@ -202,7 +220,7 @@ Random Forest method does not allow for missing values and requires factors for 
 ```{r }
 # Run random forest on training dataset with known survival
 set.seed(415)
-fit_survived <- randomForest::randomForest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare_bins + embarked + refined_title,
+fit_survived <- randomForest::randomForest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare + embarked + refined_title + family_size_bins,
                 data = train_survived,
                 importance = TRUE,
                 ntree = 2000) %T>% 
@@ -225,7 +243,7 @@ titanic_rf <- bind_rows(train_survived, test_survived) %T>%
 set.seed(415)
 
 # Run Conditional inference trees on training dataset with known survival
-fit_survived <- party::cforest(survived ~ pclass + sex + age + sib_sp + parch + fare + embarked + title,
+fit_survived <- party::cforest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare + embarked + refined_title + family_size_bins,
                       data = train_survived,
                       controls = party::cforest_unbiased(ntree = 2000, mtry = 3))
                       
