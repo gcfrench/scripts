@@ -2,111 +2,142 @@
 title: "Titanic survival machine learning analysis"
 author: Graham French
 date: '`r Sys.Date()`'
-output: html_notebook
+output:
+ html_document:
+      theme: flatly
+      highlight: textmate
+      toc: true
+      toc_float:
+        collapsed: true
+        smooth_scroll: true
 ---
 
-```{r message = FALSE}
-library(magrittr)
-library(janitor)
+```{r markdown, echo = FALSE, warning = FALSE}
+library(knitr)
+library(devtools)
+opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, warning = FALSE, comment = "")
+```
+
+```{r message = FALSE, warning = FALSE}
+# Tidyverse
 library(dplyr)
+library(purrr)
 library(tidyr)
 library(readr)
 library(stringr)
 library(forcats)
+library(janitor)
+library(here)
+library(magrittr)
+
+# data
+library(titanic)
+
+# models
+library(rpart)
+library(rattle)
+library(randomForest)
+library(party)
 ```
 
-The titanic package contains both the training and test data 
+## Titanic dataset
+
+The titanic package contains both the training and test data. Columns names converted to lower case
 
 ```{r}
-train <- titanic::titanic_train %>% 
+train <- titanic_train %>% 
   clean_names()
-test <- titanic::titanic_test %>% 
+test <- titanic_test %>% 
   clean_names()
 ```
 
-A good work through of the analysis is [Trevor Stephen's series of titanic tutorials](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
+## Feature engineering
 
-## Decision Trees
+Training and test datasets combined to clean data and extract additional useful variables
 
-[Part 3](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-3-decision-trees/) of the tutorial calculates survival using decision trees, using the default control values and titanic variables
-
-```{r fig.width=8}
-fit <- rpart::rpart(survived ~ pclass + sex + age + sib_sp + parch + fare + embarked,
-             data = train,
-             method = "class",
-             control = rpart::rpart.control(minsplit = 20, cp = 0.01)) %T>% 
-  rattle::fancyRpartPlot()
+```{r}
+titanic <- bind_rows(train, test) 
 ```
+
+### survived
+
+Feature to predict in test dataset. Converted to factor
 
 ```{r }
-prediction <- predict(fit, test, type = "class")
-```
-
-```{r }
-# Kaggle submission: score = 0.78468
-submit <- test %>%
-  mutate(PassengerId = passenger_id,
-                Survived = prediction) %>% 
-  select(PassengerId, Survived) %T>% 
-  write_csv(here::here("survival_from_decision_tree.csv")) 
-
-submit %>% 
-  tabyl(Survived) %>% 
-  adorn_pct_formatting(digits = 1) 
-```
-
-## Feature Engineering
-
-Combine the training and test datasets to clean data and extract additional useful variables
-
-```{r}
-titanic <- bind_rows(train, test) %T>% 
-  write_csv(here::here("titanic_data.csv")) 
-```
-
-#### factor conversion
-
-```{r}
-titanic <- titanic %>%
-  mutate(
-    survived = forcats::as_factor(as.character(survived)),
-    pclass = forcats::as_factor(as.character(pclass)),
-    sex = forcats::as_factor(sex),
-    embarked = forcats::as_factor(embarked)
-  )
-```
-
-#### Embarked
-
-Two passengers have an unknown embarked port. Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that the median fare for the class both passengers coincides with them embarking at Charbourg.
-
-```{r}
-titanic <- titanic %>%
-  mutate(embarked = as.character(embarked),
-         embarked = if_else(embarked == "", "C", embarked),
-         embarked = as_factor(embarked))
+titanic <- titanic %>% 
+  mutate(survived = as_factor(as.character(survived)))
 
 titanic %>% 
-  tabyl(embarked) %>% 
+  tabyl(survived) %>% 
   adorn_pct_formatting(digits = 1)
 ```
 
-#### Fare
+### pclass
 
-One third class passenger fare is unknown, replace this with the median price of third class fare ticket
+Three passenger class, feature kept as is, just converted to a factor
 
 ```{r}
-titanic %>% 
-  group_by(pclass) %>% 
-  summarise(avg_fare = median(fare, na.rm = TRUE))
+titanic <- titanic %>% 
+  mutate(pclass = as_factor(as.character(pclass)))
 
-titanic <- titanic %>%
-  mutate(fare = replace_na(fare, 8.05))
+titanic %>% 
+  tabyl(pclass) %>% 
+  adorn_pct_formatting(digits = 1)
 ```
 
-#### Age
+### name
 
-Age is not know for 263 passengers. Missing ages predicted using either a decision tree or random forest
+Useful features extracted from the names were the titles and surnames used to determine family groups
+
+**Title**
+
+An additional variable extracted was the title from the names. This was taken from Vincent Broute's post [Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)
+
+```{r}
+titanic <- titanic %>%
+  mutate(title = str_extract(name, regex("([a-z]+\\.)", ignore_case = TRUE)),
+         title = str_replace(title, "\\.", ""),
+         title = as_factor(title))
+
+# Group titles into refined groups
+titanic <- titanic %>%
+  mutate(title_bins = case_when
+         (
+           title %in% c("Capt", "Don", "Jonkheer", "Rev", "Mr") ~ "title_1",
+           title %in% c("Col", "Dr", "Major", "Master") ~ "title_2",
+           TRUE ~ "title_3"
+          )
+      ) %>% 
+  mutate(title_bins = as_factor(title_bins))
+         
+titanic %>% 
+  tabyl(title, title_bins) 
+```
+
+**surname**
+
+```{r}
+titanic <- titanic %>%
+  mutate(surname = str_extract(name, regex("([a-z]+,)", ignore_case = TRUE)),
+         surname = str_replace(surname, ",", ""))
+```
+
+### sex
+
+Useful feature, keep as is, just convert to a factor
+
+```{r}
+titanic <- titanic %>% 
+  mutate(sex = as_factor(sex))
+
+titanic %>%
+  tabyl(sex) %>% 
+  adorn_pct_formatting(digits = 1)
+```
+
+### age
+
+Age is not know for 263 passengers. Missing ages predicted using a decision tree
 
 ```{r}
 # Training dataset
@@ -114,17 +145,9 @@ train_age <- titanic %>%
   filter(!is.na(age))
 
 # Run decision tree on training dataset with known ages
-# fit_age <- rpart::rpart(age ~ pclass + sex + sib_sp + parch + fare + embarked,
-#                   data = train_age, 
-#                   method = "anova")
-
-# Run random forest on training dataset with known ages
-set.seed(415)
-fit_age <- randomForest::randomForest(age ~ pclass + sex + sib_sp + parch + fare + embarked,
-                data = train_age,
-                importance = TRUE,
-                ntree = 2000) %T>% 
-  randomForest::varImpPlot()
+fit_age <- rpart(age ~ pclass + sex + sib_sp + parch + fare + embarked,
+                 data = train_age,
+                 method = "anova")
 
 # Update missing ages with predicted ages
 test_age <- titanic %>% 
@@ -132,11 +155,10 @@ test_age <- titanic %>%
   mutate(age = predict(fit_age, .))
 
 # Recombine training and test datasets
-titanic <- bind_rows(train_age, test_age) %T>% 
-  write_csv(here::here("titanic.csv")) 
+titanic <- bind_rows(train_age, test_age)
 ```
 
-[Vincent Broute analysis]((https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)) found that passengers 12 years old or less had a greater chance of survival and passengers 18-25 years old has a less chance. 
+[Vincent Broute analysis]((https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)) found that passengers 12 years old or less had a greater chance of survival and passengers 18-25 years old has a less chance so group age into these 3 groups
 
 ```{r}
 titanic <- titanic %>% 
@@ -149,19 +171,18 @@ titanic <- titanic %>%
 titanic %>% 
   tabyl(age_bins) %>% 
   adorn_pct_formatting(digits = 1)
-
 ```
 
-#### Family size
+### sib_sp and parch
 
-Family size is the number of family members a passenger is travelling with, adding up the siblings, spouses, parents and children, and adding one for the passenger themselves
+sib_sp (number of sibling or spouses aboard) and parch (number of parents or children aboard) can by combined to create a new **family_size** feature where family size is the number of family members a passenger is travelling with, adding up the siblings, spouses, parents and children, and adding one for the passenger themselves
 
 ```{r}
 titanic <- titanic %>%
   mutate(family_size = sib_sp + parch + 1)
 ```
 
-Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that singletons or larger families above 4 members did not survive as much as passengers within a family of less than 4 members
+Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that singletons or larger families above 4 members did not survive as much as passengers within a family of less than 4 members so group family size into these 3 groups
 
 ```{r}
 titanic <- titanic %>%
@@ -175,31 +196,70 @@ titanic %>%
   adorn_pct_formatting(digits = 1)
 ```
 
-#### Family Group
-
-#### Title
-
-An additional variable to extract is the title from the names. This is taken from Vincent Broute's post [Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)
+[Trevor Stephens](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-4-feature-engineering/) suggested larger famlies would have had difficulty keeping together. To dentify each family, family size was combined with surname to create new **family_id** feature. This assumed that families with the same surname did not have the same family size
 
 ```{r}
 titanic <- titanic %>%
-  mutate(title = str_extract(name, regex("([a-z]+\\.)", ignore_case = TRUE)),
-         title = str_replace(title, "\\.", ""),
-         title = as_factor(title))
+  unite(family_id, surname, family_size, remove = FALSE)
+```
 
-# Group titles into refined groups
+Trevor combined passengers within small family units of 1-2 individuals
+
+```{r}
 titanic <- titanic %>%
-  mutate(refined_title = case_when
-         (
-           title %in% c("Capt", "Don", "Jonkheer", "Rev", "Mr") ~ "title_1",
-           title %in% c("Col", "Dr", "Major", "Master") ~ "title_2",
-           TRUE ~ "title_3"
-          )
-      ) %>% 
-  mutate(refined_title = as_factor(refined_title))
-         
+  mutate(family_id = if_else(family_size <= 2, "small_family_unit", family_id))
+```
+
+### ticket
+
+Feature not currently used in model
+
+### fare
+
+One third class passenger fare is unknown, replaced with the median price of third class fare ticket
+
+```{r}
 titanic %>% 
-  tabyl(title, refined_title) 
+  group_by(pclass) %>% 
+  summarise(avg_fare = median(fare, na.rm = TRUE))
+
+titanic <- titanic %>%
+  mutate(fare = replace_na(fare, 8.05))
+```
+
+### cabin
+
+High number of missing values, feature not used in model
+
+### embarked
+
+Two passengers have an unknown embarked port. Analysis done by [Megan Risdal](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic) shows that the median fare for the class both passengers coincides with them embarking at Charbourg. Feature converted to factor
+
+```{r}
+titanic <- titanic %>%
+  mutate(embarked = if_else(embarked == "", "C", embarked))
+
+titanic <- titanic %>% 
+  mutate(embarked = as_factor(embarked))
+
+titanic %>% 
+  tabyl(embarked) %>% 
+  adorn_pct_formatting(digits = 1)
+```
+
+**Export titanic dataset**
+
+```{r}
+titanic <- titanic %>% 
+  select(passenger_id, 
+         name, surname, title, title_bins,
+         sex,
+         age, age_bins,
+         family_id, family_size, family_size_bins, sib_sp, parch,
+         ticket, fare, cabin, pclass, embarked,
+         survived) %>% 
+  arrange(surname, family_id, -age) %T>% 
+  write_csv(here("titanic_tidied_data.csv"))
 ```
 
 ## Training dataset
@@ -210,17 +270,61 @@ train_survived <- titanic %>%
   filter(!is.na(survived))
 ```
 
+## Logistic regression
 
-## Random Forest
+Logistic regression to find the statsitically significant predictor features used by [Vincent Boute](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt/notebook)
 
-[Part 5](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/) of the tutorial calculates survival using random forest method
+```{r}
+fit_survived <- glm(survived ~ title_bins + sex + age + family_size_bins + sib_sp + parch + fare + pclass + embarked,
+                    data = train_survived,
+                    family = binomial)
+summary(fit_survived)
+```
+
+The prediction features statistically significant according to p-values were title_bins, age and pclass. Vincent also found the sib_sp was a significantly significant predictor feature
+
+```{r}
+fit_survived <- glm(survived ~ title_bins + age + pclass + sib_sp,
+                    data = train_survived,
+                    family = binomial)
+summary(fit_survived)
+```
+
+## Models
+
+### Decision Trees
+
+[Trevor Stephen's series of titanic tutorials Part 3](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-3-decision-trees/) tutorial calculated survival using decision trees, using the default control values and titanic features
+
+```{r eval=FALSE, fig.width=8}
+# Run decision tree on training dataset with known survival
+fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
+                      data = train_survived,
+                      method = "class",
+                      control = rpart::rpart.control(minsplit = 20, cp = 0.01)) %T>% 
+  rattle::fancyRpartPlot()
+
+# Update missing survival with predicted survival
+test_survived <- titanic %>% 
+  filter(is.na(survived)) %>% 
+  mutate(survived = predict(fit_survived, ., type = "class"))
+
+# Recombine training and test datasets
+titanic_dt <- bind_rows(train_survived, test_survived) %T>% 
+  write_csv(here::here("titanic_dt.csv")) 
+```
+
+
+### Random Forest
+
+[Trevor Stephen's series of titanic tutorials Part 5](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/)  calculated survival using random forest method
 
 Random Forest method does not allow for missing values and requires factors for Survived and discrete variables
 
-```{r }
+```{r eval=FALSE}
 # Run random forest on training dataset with known survival
 set.seed(415)
-fit_survived <- randomForest::randomForest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare + embarked + refined_title + family_size_bins,
+fit_survived <- randomForest::randomForest(survived ~ title_bins + age + pclass + sib_sp,
                 data = train_survived,
                 importance = TRUE,
                 ntree = 2000) %T>% 
@@ -237,13 +341,15 @@ titanic_rf <- bind_rows(train_survived, test_survived) %T>%
 
 ```
 
-## Conditional inference trees
+### Conditional inference trees
 
-```{r}
+[Trevor Stephen's series of titanic tutorials Part 5](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/) calculated survival using conditional inference tree method
+
+```{r eval=FALSE}
 set.seed(415)
 
 # Run Conditional inference trees on training dataset with known survival
-fit_survived <- party::cforest(survived ~ pclass + sex + age_bins + sib_sp + parch + fare + embarked + refined_title + family_size_bins,
+fit_survived <- party::cforest(survived ~ title_bins + age + pclass + sib_sp,
                       data = train_survived,
                       controls = party::cforest_unbiased(ntree = 2000, mtry = 3))
                       
@@ -257,8 +363,10 @@ titanic_ci <- bind_rows(train_survived, test_survived) %T>%
   write_csv(here::here("titanic_ci.csv")) 
 ```
 
-```{r}
-# Kaggle submission: score = 0.80861
+## Kaggle submission
+
+```{r eval=TRUE}
+# Kaggle submission
 submit <- test_survived %>%
   mutate(PassengerId = passenger_id,
                 Survived = survived) %>% 
@@ -270,4 +378,11 @@ submit %>%
   adorn_pct_formatting(digits = 1) 
 ```
 
+
+| model | survived | died | kaggle_score |
+|:----- |:-------- |:---- |:------------ |
+| decision tree | 152 | 266 | 0.77511 |
+| random forest | 151 | 267 | 0.76555 |
+| conditional inference | 150 | 268 | 0.78468 |
+  
 
