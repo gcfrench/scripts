@@ -1,13 +1,13 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-04-23'
+date: '2018-04-24'
 output:
  html_document:
       keep_md: true
       theme: flatly
       highlight: textmate
-      toc: true
+      toc: false
       toc_float:
         collapsed: true
         smooth_scroll: true
@@ -30,6 +30,9 @@ library(magrittr)
 
 # data
 library(titanic)
+
+# validation
+library(assertthat)
 
 # models
 library(rpart)
@@ -227,10 +230,30 @@ train_age <- titanic %>%
   filter(!is.na(age))
 
 # Run decision tree on training dataset with known ages
+complexity_parameter <- 0.01
 fit_age <- rpart(age ~ pclass + sex + sib_sp + parch + fare + embarked,
                  data = train_age,
-                 method = "anova")
+                 method = "anova", 
+                 control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) # regression tree
 
+# Check optimal Complexity Parameter is used
+rpart::plotcp(fit_age)
+```
+
+![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+```r
+optimal_index <- which.min(fit_age$cptable[, "xerror"])
+complexity_parameter_optimal <- fit_age$cptable[optimal_index, "CP"]
+assert_that(near(complexity_parameter_optimal, complexity_parameter),
+                        msg = str_glue("Optimal Complexity Parameter {complexity_parameter_optimal} not used"))
+```
+
+```
+[1] TRUE
+```
+
+```r
 # Update missing ages with predicted ages
 test_age <- titanic %>% 
   filter(is.na(age)) %>% 
@@ -514,13 +537,14 @@ Number of Fisher Scoring iterations: 5
 
 ```r
 model_name <- "decision_tree"
+complexity_parameter = 0.01
 
 # Run decision tree on training dataset with known survival
 fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
                       data = train_survived,
-                      method = "class",
-                      control = rpart::rpart.control(minsplit = 20, cp = 0.01)) %T>% 
-  rattle::fancyRpartPlot()
+                      method = "class",  # classification tree
+                      control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) %T>% 
+                rattle::fancyRpartPlot()
 ```
 
 ![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
@@ -629,7 +653,41 @@ test_survived %>%
         1 150   35.9%
 ```
 
-## Kaggle submission
+## Optimisation
+
+* Grid search
+
+Runs model on each combination of defined hyperparameters to find best hyperparameters as assessed against a validation dataset. Caret package can be used to perform a grid search, for example [Tuning Machine Learning Models Using the Caret R Package](https://machinelearningmastery.com/tuning-machine-learning-models-using-the-caret-r-package/)
+
+
+## Validation
+
+### Classification tree
+
+* Accuracy
+* Confusion matrix
+
+
+```r
+caret::confusionMatrix(data = predicted_values, reference = actual_values)
+```
+
+* Log-loss
+* AUC
+* Gini Index = Impurity Measure
+
+### Regression tree
+
+* Mean Absolute Error
+* Root Mean Square Error (Root mean squared deviation)
+
+
+```r
+Metrics::rmse(actual = actual_values, predicted = predicted_values)
+```
+
+
+### Kaggle submission
 
 | model | survived | died | kaggle_score |
 |:----- |:-------- |:---- |:------------ |
