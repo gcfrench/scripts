@@ -1,7 +1,7 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-04-24'
+date: '2018-04-25'
 output:
  html_document:
       keep_md: true
@@ -24,6 +24,7 @@ library(tidyr)
 library(readr)
 library(stringr)
 library(forcats)
+library(broom)
 library(janitor)
 library(here)
 library(magrittr)
@@ -443,48 +444,28 @@ Logistic regression to find the statsitically significant predictor features use
 ```r
 fit_survived <- glm(survived ~ title_bins + sex + age + family_size_bins + sib_sp + parch + mother + fare + pclass + embarked,
                     data = train_survived,
-                    family = binomial)
-summary(fit_survived)
+                    family = binomial) 
+tidy(fit_survived) %>% 
+  select(term, p.value)
 ```
 
 ```
-
-Call:
-glm(formula = survived ~ title_bins + sex + age + family_size_bins + 
-    sib_sp + parch + mother + fare + pclass + embarked, family = binomial, 
-    data = train_survived)
-
-Deviance Residuals: 
-    Min       1Q   Median       3Q      Max  
--2.7381  -0.5463  -0.4070   0.5827   2.4475  
-
-Coefficients:
-                                  Estimate Std. Error z value Pr(>|z|)    
-(Intercept)                      -1.676680   0.317304  -5.284 1.26e-07 ***
-title_binstitle_3                 2.684296   2.088064   1.286 0.198603    
-title_binstitle_2                 2.511816   0.446848   5.621 1.90e-08 ***
-sexfemale                         0.338156   2.077910   0.163 0.870724    
-age                              -0.028784   0.009254  -3.110 0.001868 ** 
-family_size_binsfamily_size_1-4  -0.112281   0.349468  -0.321 0.747990    
-family_size_binsfamily_size_1-11 -2.588078   1.052698  -2.459 0.013951 *  
-sib_sp                           -0.101382   0.203631  -0.498 0.618574    
-parch                             0.064626   0.232406   0.278 0.780956    
-mothermother                      0.297613   0.508281   0.586 0.558193    
-fare                              0.003501   0.002583   1.356 0.175193    
-pclass1                           1.990273   0.330865   6.015 1.79e-09 ***
-pclass2                           0.968733   0.256508   3.777 0.000159 ***
-embarkedC                         0.270803   0.255339   1.061 0.288890    
-embarkedQ                         0.240413   0.346810   0.693 0.488175    
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-(Dispersion parameter for binomial family taken to be 1)
-
-    Null deviance: 1186.66  on 890  degrees of freedom
-Residual deviance:  726.67  on 876  degrees of freedom
-AIC: 756.67
-
-Number of Fisher Scoring iterations: 5
+                               term      p.value
+1                       (Intercept) 1.262958e-07
+2                 title_binstitle_3 1.986026e-01
+3                 title_binstitle_2 1.896467e-08
+4                         sexfemale 8.707244e-01
+5                               age 1.867797e-03
+6   family_size_binsfamily_size_1-4 7.479900e-01
+7  family_size_binsfamily_size_1-11 1.395116e-02
+8                            sib_sp 6.185735e-01
+9                             parch 7.809558e-01
+10                     mothermother 5.581927e-01
+11                             fare 1.751926e-01
+12                          pclass1 1.794837e-09
+13                          pclass2 1.589740e-04
+14                        embarkedC 2.888896e-01
+15                        embarkedQ 4.881750e-01
 ```
 
 The prediction features statistically significant according to p-values were title_bins, age and pclass. Vincent also found the sib_sp was a significantly significant predictor feature
@@ -494,38 +475,19 @@ The prediction features statistically significant according to p-values were tit
 fit_survived <- glm(survived ~ title_bins + age + pclass + sib_sp,
                     data = train_survived,
                     family = binomial)
-summary(fit_survived)
+tidy(fit_survived) %>% 
+  select(term, p.value)
 ```
 
 ```
-
-Call:
-glm(formula = survived ~ title_bins + age + pclass + sib_sp, 
-    family = binomial, data = train_survived)
-
-Deviance Residuals: 
-    Min       1Q   Median       3Q      Max  
--2.5888  -0.5726  -0.3867   0.5809   2.6574  
-
-Coefficients:
-                  Estimate Std. Error z value Pr(>|z|)    
-(Intercept)       -1.53321    0.28640  -5.353 8.63e-08 ***
-title_binstitle_3  3.09715    0.20915  14.809  < 2e-16 ***
-title_binstitle_2  2.48015    0.41892   5.920 3.21e-09 ***
-age               -0.03098    0.00852  -3.636 0.000277 ***
-pclass1            2.37241    0.26506   8.950  < 2e-16 ***
-pclass2            1.11096    0.24015   4.626 3.73e-06 ***
-sib_sp            -0.55913    0.11189  -4.997 5.82e-07 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-(Dispersion parameter for binomial family taken to be 1)
-
-    Null deviance: 1186.66  on 890  degrees of freedom
-Residual deviance:  749.27  on 884  degrees of freedom
-AIC: 763.27
-
-Number of Fisher Scoring iterations: 5
+               term      p.value
+1       (Intercept) 8.627770e-08
+2 title_binstitle_3 1.289287e-49
+3 title_binstitle_2 3.212978e-09
+4               age 2.766574e-04
+5           pclass1 3.539938e-19
+6           pclass2 3.726601e-06
+7            sib_sp 5.819149e-07
 ```
 
 ## Models
@@ -545,11 +507,7 @@ fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
                       method = "class",  # classification tree
                       control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) %T>% 
                 rattle::fancyRpartPlot()
-```
 
-![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
-
-```r
 # Update missing survival with predicted survival
 test_survived <- titanic %>% 
   filter(is.na(survived)) %>% 
@@ -566,32 +524,67 @@ test_survived %>%
   adorn_pct_formatting(digits = 1) 
 ```
 
-```
- survived   n percent
-        0 266   63.6%
-        1 152   36.4%
-```
-
 ### Random Forest
 
 [Trevor Stephen's Part 5 tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-5-random-forests/)  calculated survival using random forest method
 
 Random Forest method does not allow for missing values and requires factors for Survived and discrete variables
 
+Random Forest hyperparameters include ntree, mtry, sampsize, nodesize, maxnodes
+
+Using tuneRF function the optimal minimal OOB error for mtry is 2. From plotting Out-of-bag error the optimal number of trees, ntree is around 250. Default number of 500 used.
+
 
 ```r
 model_name <- "random_forest"
-  
-# Run random forest on training dataset with known survival
 set.seed(415)
-fit_survived <- randomForest::randomForest(survived ~ title_bins + age + pclass + sib_sp,
-                data = train_survived,
-                importance = TRUE,
-                ntree = 2000) %T>% 
-  randomForest::varImpPlot()
+
+# Optimise hyperparameter mtry
+optimise_rf <- randomForest::tuneRF(x = subset(train_survived, select = c(title_bins, age, pclass, sib_sp)),
+              y = train_survived$survived,
+              ntreeTry = 500)
+```
+
+```
+mtry = 2  OOB error = 17.85% 
+Searching left ...
+mtry = 1 	OOB error = 17.96% 
+-0.006289308 0.05 
+Searching right ...
+mtry = 4 	OOB error = 18.97% 
+-0.06289308 0.05 
 ```
 
 ![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+
+```r
+# Run random forest on training dataset with known survival
+fit_survived <- randomForest::randomForest(survived ~ title_bins + age + pclass + sib_sp,
+                data = train_survived,
+                importance = TRUE,
+                ntree = 500,
+                mtry = 2) %T>% 
+  print() %T>% 
+  plot() %T>% 
+  randomForest::varImpPlot()
+```
+
+```
+
+Call:
+ randomForest(formula = survived ~ title_bins + age + pclass +      sib_sp, data = train_survived, importance = TRUE, ntree = 500,      mtry = 2) 
+               Type of random forest: classification
+                     Number of trees: 500
+No. of variables tried at each split: 2
+
+        OOB estimate of  error rate: 17.85%
+Confusion matrix:
+    0   1 class.error
+0 489  60   0.1092896
+1  99 243   0.2894737
+```
+
+![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-25-2.png)<!-- -->![](titanic_survival_machine_learning_gcf_files/figure-html/unnamed-chunk-25-3.png)<!-- -->
 
 ```r
 # Update missing survival with predicted survival
@@ -612,8 +605,8 @@ test_survived %>%
 
 ```
  survived   n percent
-        0 267   63.9%
-        1 151   36.1%
+        0 265   63.4%
+        1 153   36.6%
 ```
 
 ### Conditional inference trees
@@ -674,6 +667,12 @@ caret::confusionMatrix(data = predicted_values, reference = actual_values)
 
 * Log-loss
 * AUC
+
+
+```r
+Metrics::auc(actual, predicted)
+```
+
 * Gini Index = Impurity Measure
 
 ### Regression tree

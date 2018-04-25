@@ -27,6 +27,7 @@ library(tidyr)
 library(readr)
 library(stringr)
 library(forcats)
+library(broom)
 library(janitor)
 library(here)
 library(magrittr)
@@ -334,8 +335,9 @@ Logistic regression to find the statsitically significant predictor features use
 ```{r}
 fit_survived <- glm(survived ~ title_bins + sex + age + family_size_bins + sib_sp + parch + mother + fare + pclass + embarked,
                     data = train_survived,
-                    family = binomial)
-summary(fit_survived)
+                    family = binomial) 
+tidy(fit_survived) %>% 
+  select(term, p.value)
 ```
 
 The prediction features statistically significant according to p-values were title_bins, age and pclass. Vincent also found the sib_sp was a significantly significant predictor feature
@@ -344,7 +346,8 @@ The prediction features statistically significant according to p-values were tit
 fit_survived <- glm(survived ~ title_bins + age + pclass + sib_sp,
                     data = train_survived,
                     family = binomial)
-summary(fit_survived)
+tidy(fit_survived) %>% 
+  select(term, p.value)
 ```
 
 ## Models
@@ -353,7 +356,7 @@ summary(fit_survived)
 
 [Trevor Stephen's Part 3 tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/r-part-3-decision-trees/) tutorial calculated survival using decision trees, using the default control values and titanic features
 
-```{r eval=TRUE, fig.width=8}
+```{r eval=FALSE, fig.width=8}
 model_name <- "decision_tree"
 complexity_parameter = 0.01
 
@@ -386,15 +389,27 @@ test_survived %>%
 
 Random Forest method does not allow for missing values and requires factors for Survived and discrete variables
 
+Random Forest hyperparameters include ntree, mtry, sampsize, nodesize, maxnodes
+
+Using tuneRF function the optimal minimal OOB error for mtry is 2. From plotting Out-of-bag error the optimal number of trees, ntree is around 250. Default number of 500 used.
+
 ```{r eval=TRUE}
 model_name <- "random_forest"
+set.seed(415)
+
+# Optimise hyperparameter mtry
+optimise_rf <- randomForest::tuneRF(x = subset(train_survived, select = c(title_bins, age, pclass, sib_sp)),
+              y = train_survived$survived,
+              ntreeTry = 500)
   
 # Run random forest on training dataset with known survival
-set.seed(415)
 fit_survived <- randomForest::randomForest(survived ~ title_bins + age + pclass + sib_sp,
                 data = train_survived,
                 importance = TRUE,
-                ntree = 2000) %T>% 
+                ntree = 500,
+                mtry = 2) %T>% 
+  print() %T>% 
+  plot() %T>% 
   randomForest::varImpPlot()
 
 # Update missing survival with predicted survival
@@ -463,6 +478,11 @@ caret::confusionMatrix(data = predicted_values, reference = actual_values)
 
 * Log-loss
 * AUC
+
+```{r eval=FALSE}
+Metrics::auc(actual, predicted)
+```
+
 * Gini Index = Impurity Measure
 
 ### Regression tree
