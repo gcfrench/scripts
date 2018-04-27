@@ -1,7 +1,7 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-04-25'
+date: '2018-04-27'
 output:
  html_document:
       keep_md: true
@@ -49,6 +49,10 @@ The following tutorial helped with learning and applying machine learning to ana
 * [Vincent Broute's Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt)
 * [Megan Risdal Exploring Survival on the Titanic](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic)
 * [Trevor Stephens Titanic: Getting Started with R Titanic Tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
+
+Other modelling blogs
+
+* [Kassambraro's Stepwise Logistic Regression Essentials in R](http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/)
 
 ## Functions
 

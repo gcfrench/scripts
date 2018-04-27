@@ -53,6 +53,10 @@ The following tutorial helped with learning and applying machine learning to ana
 * [Megan Risdal Exploring Survival on the Titanic](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic)
 * [Trevor Stephens Titanic: Getting Started with R Titanic Tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
 
+Other modelling blogs
+
+* [Kassambraro's Stepwise Logistic Regression Essentials in R](http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/)
+
 ## Functions
 
 ### Export titanic dataset
