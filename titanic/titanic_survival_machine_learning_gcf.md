@@ -1,7 +1,7 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-04-27'
+date: '2018-05-01'
 output:
  html_document:
       keep_md: true
@@ -49,10 +49,6 @@ The following tutorial helped with learning and applying machine learning to ana
 * [Vincent Broute's Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt)
 * [Megan Risdal Exploring Survival on the Titanic](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic)
 * [Trevor Stephens Titanic: Getting Started with R Titanic Tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
-
-Other modelling blogs
-
-* [Kassambraro's Stepwise Logistic Regression Essentials in R](http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/)
 
 ## Functions
 
@@ -659,15 +655,63 @@ Runs model on each combination of defined hyperparameters to find best hyperpara
 
 ## Validation
 
-### Classification tree
-
-* Accuracy
-* Confusion matrix
+### Classification
 
 
 ```r
+# Confusion Matrix
 caret::confusionMatrix(data = predicted_values, reference = actual_values)
+
+# Accuracy
+accuracy = true_pos + true_neg / (true_pos + false_neg + false_pos + true_neg)
+accuracy <- sum(diag(confusion_matrix))/sum(confusion_matrix)
+
+# Error
+error = 1 - Accuracy
+
+# Precision
+precision = true_pos / (true_pos + false_pos)
+
+# recall
+recall = true_pos / (true_pos + false_neg)
 ```
+
+### Regression
+
+
+```r
+# Mean Absolute Error
+
+# Root Mean Square Error
+rmse <- sqrt(sum((actual_values - predicted_values) ^ 2) / nrow(actual_values)))
+Metrics::rmse(actual = actual_values, predicted = predicted_values)
+```
+
+### Clustering
+
+
+```r
+clusters <- kmeans(actual_values, number_of_clusters)
+
+# Within cluster similarity
+
+## Within sum of squares (WSS)
+clusters$tot.withinss
+
+## Cluster diameter
+
+# Between cluster similarity
+
+## Between cluster sum of sqaures (BSS)
+clusters$betweenss
+
+## Intercluster distance
+
+# Dunn Index
+
+dunn_index = minimal interclustal distance / maximal diameter
+```
+
 
 * Log-loss
 * AUC
@@ -678,17 +722,6 @@ Metrics::auc(actual, predicted)
 ```
 
 * Gini Index = Impurity Measure
-
-### Regression tree
-
-* Mean Absolute Error
-* Root Mean Square Error (Root mean squared deviation)
-
-
-```r
-Metrics::rmse(actual = actual_values, predicted = predicted_values)
-```
-
 
 ### Kaggle submission
 
