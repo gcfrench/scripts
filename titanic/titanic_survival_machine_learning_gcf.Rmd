@@ -53,6 +53,10 @@ The following tutorial helped with learning and applying machine learning to ana
 * [Megan Risdal Exploring Survival on the Titanic](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic)
 * [Trevor Stephens Titanic: Getting Started with R Titanic Tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
 
+Other blogs on machine learning
+
+* [Andrew Collier Classification: Get the Balance Right](http://datawookie.netlify.com/blog/2018/04/classification-get-the-balance-right/)
+
 ## Functions
 
 ### Export titanic dataset
@@ -364,6 +368,7 @@ complexity_parameter = 0.01
 fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
                       data = train_survived,
                       method = "class",  # classification tree
+                      parms = list(split = "gini"), # "information" = information gain criterion
                       control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) %T>% 
                 rattle::fancyRpartPlot()
 

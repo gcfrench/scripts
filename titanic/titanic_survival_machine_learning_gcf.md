@@ -1,7 +1,7 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-05-01'
+date: '2018-05-02'
 output:
  html_document:
       keep_md: true
@@ -49,6 +49,10 @@ The following tutorial helped with learning and applying machine learning to ana
 * [Vincent Broute's Titanic EDA & predictions attempt](https://www.kaggle.com/neveldo/titanic-eda-predictions-attempt)
 * [Megan Risdal Exploring Survival on the Titanic](https://www.kaggle.com/mrisdal/exploring-survival-on-the-titanic)
 * [Trevor Stephens Titanic: Getting Started with R Titanic Tutorial](http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/)
+
+Other blogs on machine learning
+
+* [Andrew Collier Classification: Get the Balance Right](http://datawookie.netlify.com/blog/2018/04/classification-get-the-balance-right/)
 
 ## Functions
 
@@ -505,8 +509,12 @@ complexity_parameter = 0.01
 fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
                       data = train_survived,
                       method = "class",  # classification tree
+                      parms = list(split = "gini"),
                       control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) %T>% 
                 rattle::fancyRpartPlot()
+
+# Prune tree if overfitted
+# fit_survived <- rpart::prune(fit_survived, cp = lower_complexity_parameter)
 
 # Update missing survival with predicted survival
 test_survived <- titanic %>% 
@@ -660,6 +668,7 @@ Runs model on each combination of defined hyperparameters to find best hyperpara
 
 ```r
 # Confusion Matrix
+table(test$value, predicted_value)
 caret::confusionMatrix(data = predicted_values, reference = actual_values)
 
 # Accuracy
