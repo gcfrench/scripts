@@ -1,7 +1,7 @@
 ---
 title: "Titanic survival machine learning analysis"
 author: Graham French
-date: '2018-05-02'
+date: '2018-05-04'
 output:
  html_document:
       keep_md: true
@@ -53,6 +53,7 @@ The following tutorial helped with learning and applying machine learning to ana
 Other blogs on machine learning
 
 * [Andrew Collier Classification: Get the Balance Right](http://datawookie.netlify.com/blog/2018/04/classification-get-the-balance-right/)
+* [Machine Learn Plus: Caret Package - A Practical Guide to Machine Learning in R](http://www.machinelearningplus.com/machine-learning/caret-package/)
 
 ## Functions
 
@@ -509,7 +510,7 @@ complexity_parameter = 0.01
 fit_survived <- rpart::rpart(survived ~ title_bins + age + pclass + sib_sp,
                       data = train_survived,
                       method = "class",  # classification tree
-                      parms = list(split = "gini"),
+                      parms = list(split = "gini"), # "information" = information gain criterion
                       control = rpart::rpart.control(minsplit = 20, cp = complexity_parameter, maxdepth = 30)) %T>% 
                 rattle::fancyRpartPlot()
 

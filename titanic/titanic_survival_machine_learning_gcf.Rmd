@@ -56,6 +56,7 @@ The following tutorial helped with learning and applying machine learning to ana
 Other blogs on machine learning
 
 * [Andrew Collier Classification: Get the Balance Right](http://datawookie.netlify.com/blog/2018/04/classification-get-the-balance-right/)
+* [Machine Learn Plus: Caret Package - A Practical Guide to Machine Learning in R](http://www.machinelearningplus.com/machine-learning/caret-package/)
 
 ## Functions
 
