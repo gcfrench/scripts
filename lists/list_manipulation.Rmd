@@ -1,0 +1,29 @@
+---
+output: html_document
+---
+
+```{r markdown, echo = FALSE, warning = FALSE}
+library(knitr)
+library(devtools)
+opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
+```
+
+```{r setup, message = FALSE, warning = FALSE}
+
+```
+
+```{r}
+nested_list <- list(one_a = "1a",
+                    one_b = "1b",
+                    one_c = "1c",
+                    two = list(two_a = "2a",
+                               two_b = "2b",
+                               two_c = "2c",
+                               three = list(three_a = "3a",
+                                            three_b = "3b",
+                                            three_c = "3c",
+                                            four = list(four_a = "4a",
+                                                        four_b = "4b",
+                                                        four_c = "4c"))))
+```
+
