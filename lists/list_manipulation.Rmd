@@ -4,11 +4,12 @@ output: html_document
 
 ```{r markdown, echo = FALSE, warning = FALSE}
 library(knitr)
-opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
+opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(purrr)
+library(tibble)
 library(magrittr)
 ```
 
@@ -80,25 +81,46 @@ nested_list$two$three$four$c
 
 ## purrr
 
-map works best with the list of lists structure where it can extract an element from each list
+map works best with the list of lists structure where it can extract one or more elements from each list
+
+Extract function is from magrittr and equivalent to using `[`
 
 ```{r}
 map(list_of_lists, "c")
+# map(list_of_lists, extract, c("a", "b", "c"))
 ```
 
-In the nested list structure map functions will iterate through the first list element in the list. In the nested list example, first drill down to the 3rd level using subsetting and then map will return NA for the first three elements as they are not lists, and "4c" from the fourth list element.
-
-Extract function is from magrittr and equivalent to using `[`
+In the nested list structure map functions iterates through the first list element only in the list. In the nested list example, first drill down to the 3rd level using subsetting and then map will return NA for the first three elements as they are not lists, and "4c" from the fourth list element.
 
 ```{r}
 map(nested_list[["two"]][["three"]], extract, "c")
 ```
 
-If you wanted to extract elements from the first level then it needs to be within a list first
+**Converting list to data frame**
+
+For a simple list, this can be done by subsetting to produce a wide format or using unlist and as_tibble to produce a long format
 
 ```{r}
-map(list(nested_list), extract, "c")
+tibble_wide <- simple_list %>% {
+  tibble(
+   a = simple_list[["a"]],
+   b = simple_list[["b"]],
+   c = simple_list[["c"]]
+  )
+}
+tibble_long <- as_tibble(unlist(simple_tibble))
 ```
 
+For a list of lists the map functions can be used. A { bracket is required to prevent list_of_lists being passed as the first arguement into tribble
+
+```{r}
+tibble_wide <- list_of_lists %>% {
+  tibble(
+   a = map_chr(., "a"),
+   b = map_chr(., "b"),
+   c = map_chr(., "c")
+  )
+}
+```
 
 
