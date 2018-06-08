@@ -23,6 +23,6 @@ nested_list <- list(a = "1a",
                                             four = list(a = "4a",
                                                         b = "4b",
                                                         c = "4c"))))
-listviewer::jsonedit(nested_list, mode = "view")
+listviewer::jsonedit(nested_list, mode = "view", width = 300, height = 500)
 ```
 
