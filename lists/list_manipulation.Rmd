@@ -8,7 +8,25 @@ opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
+library(purrr)
+library(magrittr)
 ```
+
+# Example lists
+
+Lists can be viewed using str, limited by level or length, or interactively using listviewer::jsonedit
+
+## Simple list
+
+```{r}
+simple_list <- list(a = "4a",
+                    b = "4b",
+                    c = "4c")
+str(simple_list, max.level = 1, list.len = 3)
+#listviewer::jsonedit(simple_list, mode = "view", width = 300, height = 200)
+```
+
+## Nested list
 
 ```{r}
 nested_list <- list(a = "1a",
@@ -23,6 +41,37 @@ nested_list <- list(a = "1a",
                                             four = list(a = "4a",
                                                         b = "4b",
                                                         c = "4c"))))
-listviewer::jsonedit(nested_list, mode = "view", width = 300, height = 500)
+str(nested_list, max.level = 4, list.len = 4)
+#listviewer::jsonedit(nested_list, mode = "view", width = 300, height = 500)
 ```
+
+## Subsetting
+
+All these will return the value "4c", where a double bracket returns the component and single bracket a list
+
+```{r}
+simple_list[[3]]
+
+nested_list[[4]][[4]][[4]][[3]]
+nested_list[["two"]][["three"]][["four"]][["c"]]
+nested_list$two$three$four$c
+```
+
+## purrr
+
+map functions will iterate through the first list element in the list. In the nested list example, first drill down to the 3rd level using subsetting and then map will return NA for the first three elements as they are not lists, and "4c" from the fourth list element.
+
+Extract function is from magrittr and equivalent to using `[`
+
+```{r}
+map(nested_list[["two"]][["three"]], extract, "c")
+```
+
+If you wanted to extract elements from the first level then it needs to be within a list first
+
+```{r}
+map(list(simple_list), extract, "c")
+```
+
+
 
