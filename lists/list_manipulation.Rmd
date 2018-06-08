@@ -4,12 +4,10 @@ output: html_document
 
 ```{r markdown, echo = FALSE, warning = FALSE}
 library(knitr)
-library(devtools)
 opts_chunk$set(echo = FALSE, eval = TRUE, cache = FALSE, comment = "")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
-
 ```
 
 ```{r}
@@ -25,5 +23,6 @@ nested_list <- list(one_a = "1a",
                                             four = list(four_a = "4a",
                                                         four_b = "4b",
                                                         four_c = "4c"))))
+listviewer::jsonedit(nested_list, mode = "view")
 ```
 
