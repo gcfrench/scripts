@@ -9,7 +9,9 @@ opts_chunk$set(echo = TRUE, eval = TRUE, cache = FALSE, comment = "")
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(purrr)
+library(dplyr)
 library(tibble)
+library(tidyr)
 library(magrittr)
 ```
 
@@ -65,7 +67,7 @@ str(nested_list, max.level = 4, list.len = 4)
 #listviewer::jsonedit(nested_list, mode = "view", width = 300, height = 500)
 ```
 
-## Subsetting
+# Subsetting
 
 All these will return the value "4c", where a double bracket returns the component and single bracket a list
 
@@ -79,7 +81,7 @@ nested_list[["two"]][["three"]][["four"]][["c"]]
 nested_list$two$three$four$c
 ```
 
-## purrr
+# purrr
 
 map works best with the list of lists structure where it can extract one or more elements from each list
 
@@ -96,9 +98,15 @@ In the nested list structure map functions iterates through the first list eleme
 map(nested_list[["two"]][["three"]], extract, "c")
 ```
 
-**Converting list to data frame**
+Alternatively nested map functions can be used to iterate to the required list 
 
-For a simple list, this can be done by subsetting to produce a wide format or using unlist and as_tibble to produce a long format
+```{r}
+nested_list %>% map(. %>% map(. %>% map(extract, "c")))
+```
+
+# Lists to tibbles and back
+
+For a **simple list**, this can be done by subsetting to produce a wide format or using unlist and as_tibble to produce a long format
 
 ```{r}
 tibble_wide <- simple_list %>% {
@@ -108,10 +116,10 @@ tibble_wide <- simple_list %>% {
    c = simple_list[["c"]]
   )
 }
-tibble_long <- as_tibble(unlist(simple_tibble))
+tibble_long <- as_tibble(unlist(simple_list))
 ```
 
-For a list of lists the map functions can be used. A { bracket is required to prevent list_of_lists being passed as the first arguement into tribble
+For a **list of lists** the map functions can be used. A { bracket is required to prevent list_of_lists being passed as the first arguement into tribble
 
 ```{r}
 tibble_wide <- list_of_lists %>% {
@@ -123,4 +131,46 @@ tibble_wide <- list_of_lists %>% {
 }
 ```
 
+tibble::enframe can be used to **convert a named list to a dataframe**, with two rows, one with the list element names and the second column with the lists as a list column.
 
+If the list is not a named list the names can be first added from the list elements with purrr::set_names
+
+```{r}
+# col_names_vector <- map_chr(list_of_lists, "a")
+tibble_list_column <- list_of_lists %>%
+  # set_names(col_names_vector) %>% 
+  enframe("level", "list_column")
+```
+
+The **list column can be converted back to a list_of_lists** using tibble::deframe
+
+```{r}
+list_of_lists <- deframe(tibble_list_column)
+str(list_of_lists, max.level = 2, list.len = 4)
+```
+
+Individual list **elements within the list column can be extracted into their own columns** using the map functions, making a wide tibble
+
+```{r}
+tibble_wide <- tibble_list_column %>% 
+  mutate(a = map_chr(list_column, "a"),
+         b = map_chr(list_column, "b"),
+         c = map_chr(list_column, "c"))
+```
+
+tidyr::unnest function can **convert the list column tibble into a long tibble format**
+
+```{r}
+tibble_long <- unnest(tibble_list_column)
+```
+
+The **tibble long format can be converted back to a tibble list column** using tidyr::nest function, grouped by the column that will produce the first level list names
+
+```{r}
+tibble_list_column <- tibble_long %>% 
+  group_by(level) %>% 
+  nest() %>% 
+  ungroup()
+```
+
+[HERE](https://jennybc.github.io/purrr-tutorial/ls03_map-function-syntax.html)
