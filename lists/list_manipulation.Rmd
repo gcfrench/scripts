@@ -26,6 +26,25 @@ str(simple_list, max.level = 1, list.len = 3)
 #listviewer::jsonedit(simple_list, mode = "view", width = 300, height = 200)
 ```
 
+## List of lists
+
+```{r}
+list_of_lists <- list(one = list(a = "1a",
+                                 b = "1b",
+                                 c = "1c"),
+                      two = list(a = "2a",
+                                 b = "2b",
+                                 c = "2c"),
+                      three = list(a = "3a",
+                                   b = "3b",
+                                   c = "3c"),
+                      four = list(a = "4a",
+                                  b = "4b",
+                                  c = "4c"))
+str(list_of_lists, max.level = 2, list.len = 4)
+#listviewer::jsonedit(list_of_lists, mode = "view", width = 300, height = 500)
+```
+
 ## Nested list
 
 ```{r}
@@ -52,6 +71,8 @@ All these will return the value "4c", where a double bracket returns the compone
 ```{r}
 simple_list[[3]]
 
+list_of_lists[[4]][[3]]
+
 nested_list[[4]][[4]][[4]][[3]]
 nested_list[["two"]][["three"]][["four"]][["c"]]
 nested_list$two$three$four$c
@@ -59,7 +80,13 @@ nested_list$two$three$four$c
 
 ## purrr
 
-map functions will iterate through the first list element in the list. In the nested list example, first drill down to the 3rd level using subsetting and then map will return NA for the first three elements as they are not lists, and "4c" from the fourth list element.
+map works best with the list of lists structure where it can extract an element from each list
+
+```{r}
+map(list_of_lists, "c")
+```
+
+In the nested list structure map functions will iterate through the first list element in the list. In the nested list example, first drill down to the 3rd level using subsetting and then map will return NA for the first three elements as they are not lists, and "4c" from the fourth list element.
 
 Extract function is from magrittr and equivalent to using `[`
 
@@ -70,7 +97,7 @@ map(nested_list[["two"]][["three"]], extract, "c")
 If you wanted to extract elements from the first level then it needs to be within a list first
 
 ```{r}
-map(list(simple_list), extract, "c")
+map(list(nested_list), extract, "c")
 ```
 
 
